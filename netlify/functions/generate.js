@@ -10,28 +10,51 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { prompt } = JSON.parse(event.body || "{}");
-    const seedTopic = prompt || "a futuristic cyberpunk city skyline";
+    const { prompt, mode } = JSON.parse(event.body || "{}");
+    const userPrompt = prompt || "Cyberpunk Robot";
 
-    // Call OpenAI's DALL-E 3 image model
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: seedTopic,
-      n: 1,
-      size: "1024x1024",
+    // OPTION 2: REAL IMAGE GENERATION (DALL-E 2 for sub-10s response time)
+    if (mode === "dalle") {
+      const imageResponse = await openai.images.generate({
+        model: "dall-e-2",
+        prompt: userPrompt,
+        n: 1,
+        size: "256x256", // Fast size to prevent Netlify execution timeout
+      });
+
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ result: imageResponse.data[0].url }),
+      };
+    }
+
+    // OPTION 1: CHARACTER / ASCII ART (GPT-4o)
+    const chatResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert ASCII artist. Generate high-detail ASCII art using mono-spaced text characters (#, @, *, +, -, /). Output ONLY the ASCII character block. Do not wrap in markdown code blocks."
+        },
+        {
+          role: "user",
+          content: `Create an ASCII art rendering of: ${userPrompt}`
+        }
+      ],
+      max_tokens: 1000,
     });
 
-    const imageUrl = response.data[0].url;
-
-    // Returns an HTML <img> tag pointing to the generated image URL
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result: `<img src="${imageUrl}" style="max-width:100%; border-radius:8px;" />` }),
+      body: JSON.stringify({ result: chatResponse.choices[0].message.content }),
     };
+
   } catch (error) {
     return {
       statusCode: 500,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ error: error.message }),
     };
   }
