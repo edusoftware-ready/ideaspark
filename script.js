@@ -35,7 +35,9 @@ async function runAutonomousTask() {
       entry.style.marginTop = "20px";
       entry.style.paddingTop = "10px";
       entry.innerText = `=== BATCH #${runCount} (${new Date().toLocaleTimeString()}) ===\n\n${data.result}`;
-      outputEl.appendChild(entry);
+      outputEl.innerHTML += data.result;
+
+      
     }
   } catch (err) {
     console.error("Batch Error:", err);
