@@ -14,7 +14,7 @@ async function runAutonomousTask() {
   runCount++;
   const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
-  console.log(`[Batch #${runCount}] Request sent for: ${randomTopic}`);
+  console.log(`[Batch #${runCount}] Sending request for: ${randomTopic}`);
 
   try {
     const res = await fetch("/.netlify/functions/generate", {
@@ -30,14 +30,16 @@ async function runAutonomousTask() {
     const data = await res.json();
     
     if (data.result) {
-      const entry = document.createElement("div");
-      entry.style.borderTop = "2px solid #000";
-      entry.style.marginTop = "20px";
-      entry.style.paddingTop = "10px";
-      entry.innerText = `=== BATCH #${runCount} (${new Date().toLocaleTimeString()}) ===\n\n${data.result}`;
-      outputEl.innerHTML += data.result;
+      // Formats the batch container HTML
+      const formattedResult = `
+        <div style="border-top: 2px solid #000; margin-top: 20px; padding-top: 10px;">
+          <h3>=== BATCH #${runCount} (${new Date().toLocaleTimeString()}) ===</h3>
+          <div>${data.result}</div>
+        </div>
+      `;
 
-      
+      // Appends HTML or image content directly into the DOM
+      outputEl.innerHTML += formattedResult;
     }
   } catch (err) {
     console.error("Batch Error:", err);
@@ -46,6 +48,6 @@ async function runAutonomousTask() {
 
 window.addEventListener("DOMContentLoaded", () => {
   runAutonomousTask();
-  // Fire a new request every 15 seconds
+  // Runs a new request every 15 seconds safely
   setInterval(runAutonomousTask, 15000);
 });
