@@ -11,29 +11,23 @@ exports.handler = async (event, context) => {
 
   try {
     const { prompt } = JSON.parse(event.body || "{}");
-    const seedTopic = prompt || "Autonomous Enterprise Architecture System";
+    const seedTopic = prompt || "a futuristic cyberpunk city skyline";
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are an enterprise software architect. Provide an extremely verbose, comprehensive, and exhaustive technical analysis without shortening any descriptions or code snippets."
-        },
-        {
-          role: "user",
-          content: `Generate an exhaustive end-to-end technical system architecture, database design, API specification, and security audit blueprint for: ${seedTopic}.`
-        }
-      ],
-      max_tokens: 2000,
+    // Call OpenAI's DALL-E 3 image model
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: seedTopic,
+      n: 1,
+      size: "1024x1024",
     });
 
-    const aiResponse = response.choices[0].message.content;
+    const imageUrl = response.data[0].url;
 
+    // Returns an HTML <img> tag pointing to the generated image URL
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result: aiResponse }),
+      body: JSON.stringify({ result: `<img src="${imageUrl}" style="max-width:100%; border-radius:8px;" />` }),
     };
   } catch (error) {
     return {
