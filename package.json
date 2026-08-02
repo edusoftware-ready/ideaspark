@@ -1,0 +1,6 @@
+{
+  "name": "ideaspark",
+  "dependencies": {
+    "openai": "latest"
+  }
+}
