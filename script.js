@@ -6,16 +6,15 @@ const topics = [
   "Real-Time Multi-Region Database Sync Platform"
 ];
 
-let timer = null;
+let runCount = 0;
 
 async function runAutonomousTask() {
-  const statusEl = document.getElementById("status");
-  const outputEl = document.getElementById("output");
+  const outputEl = document.getElementById("output") || document.body;
   
-  // Pick a random seed topic
+  runCount++;
   const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-  
-  if (statusEl) statusEl.innerText = `[${new Date().toLocaleTimeString()}] Running automated loop for: ${randomTopic}...`;
+
+  console.log(`[Batch #${runCount}] Request sent for: ${randomTopic}`);
 
   try {
     const res = await fetch("/.netlify/functions/generate", {
@@ -24,27 +23,27 @@ async function runAutonomousTask() {
       body: JSON.stringify({ prompt: randomTopic })
     });
     
+    if (!res.ok) {
+      throw new Error(`HTTP Error Status: ${res.status}`);
+    }
+
     const data = await res.json();
     
-    if (data.result && outputEl) {
-      outputEl.innerText = data.result; // Displays the generated technical spec
+    if (data.result) {
+      const entry = document.createElement("div");
+      entry.style.borderTop = "2px solid #000";
+      entry.style.marginTop = "20px";
+      entry.style.paddingTop = "10px";
+      entry.innerText = `=== BATCH #${runCount} (${new Date().toLocaleTimeString()}) ===\n\n${data.result}`;
+      outputEl.appendChild(entry);
     }
   } catch (err) {
-    console.error("Loop error:", err);
+    console.error("Batch Error:", err);
   }
 }
 
-// Start autonomous execution when the page opens
 window.addEventListener("DOMContentLoaded", () => {
-  // Run once immediately
   runAutonomousTask();
-
-  // Automatically repeat every 45 seconds (gives serverless functions time to execute)
-  timer = setInterval(runAutonomousTask, 45000);
-  
-  // Stop automatically after 3 hours (10,800,000 milliseconds)
-  setTimeout(() => {
-    clearInterval(timer);
-    alert("3-Hour Autonomous Token Run Completed!");
-  }, 10800000);
+  // Fire a new request every 15 seconds
+  setInterval(runAutonomousTask, 15000);
 });
