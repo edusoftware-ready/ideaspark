@@ -13,13 +13,13 @@ exports.handler = async (event, context) => {
     const { prompt, mode } = JSON.parse(event.body || "{}");
     const userPrompt = prompt || "Cyberpunk Robot";
 
-    // OPTION 2: REAL IMAGE GENERATION (DALL-E 2 for sub-10s response time)
+    // OPTION 2: REAL IMAGE GENERATION (Using current gpt-image-1-mini model)
     if (mode === "dalle") {
       const imageResponse = await openai.images.generate({
-        model: "dall-e-2",
+        model: "gpt-image-1-mini",
         prompt: userPrompt,
         n: 1,
-        size: "256x256", // Fast size to prevent Netlify execution timeout
+        size: "256x256", // Fast resolution to avoid serverless timeouts
       });
 
       return {
