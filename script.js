@@ -1,53 +1,69 @@
-const topics = [
-  "Global Distributed Microservices Engine",
-  "High-Frequency Algorithmic Trading Pipeline",
-  "Zero-Knowledge Proof Authentication Protocol",
-  "AI-Powered Satellite Telemetry Analyzer",
-  "Real-Time Multi-Region Database Sync Platform"
+const prompts = [
+  "Futuristic cyberpunk cybernetic owl",
+  "Retro arcade neon robot warrior",
+  "Detailed mechanical dragon skull",
+  "Steampunk airship flying through clouds",
+  "Intricate geometric mandala pattern"
 ];
 
 let runCount = 0;
 
 async function runAutonomousTask() {
-  const outputEl = document.getElementById("output") || document.body;
+  const outputEl = document.getElementById("output");
+  const statusEl = document.getElementById("status");
+  const modeSelect = document.getElementById("modeSelect");
   
+  const currentMode = modeSelect ? modeSelect.value : "ascii";
   runCount++;
-  const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+  const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
 
-  console.log(`[Batch #${runCount}] Sending request for: ${randomTopic}`);
+  if (statusEl) {
+    statusEl.innerText = `[Batch #${runCount}] Generating ${currentMode.toUpperCase()} for: "${randomPrompt}"...`;
+  }
 
   try {
     const res = await fetch("/.netlify/functions/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: randomTopic })
+      body: JSON.stringify({ prompt: randomPrompt, mode: currentMode })
     });
-    
-    if (!res.ok) {
-      throw new Error(`HTTP Error Status: ${res.status}`);
-    }
 
     const data = await res.json();
-    
-    if (data.result) {
-      // Formats the batch container HTML
-      const formattedResult = `
-        <div style="border-top: 2px solid #000; margin-top: 20px; padding-top: 10px;">
-          <h3>=== BATCH #${runCount} (${new Date().toLocaleTimeString()}) ===</h3>
-          <div>${data.result}</div>
-        </div>
-      `;
 
-      // Appends HTML or image content directly into the DOM
-      outputEl.innerHTML += formattedResult;
+    if (!res.ok) {
+      throw new Error(data.error || `HTTP Error ${res.status}`);
+    }
+
+    if (data.result && outputEl) {
+      const entry = document.createElement("div");
+      entry.style.borderTop = "2px solid #333";
+      entry.style.marginTop = "20px";
+      entry.style.paddingTop = "10px";
+
+      if (currentMode === "ascii") {
+        entry.innerHTML = `
+          <h3>=== BATCH #${runCount} (ASCII ART) ===</h3>
+          <pre style="font-family: monospace; font-size: 11px; line-height: 1; background: #222; color: #00ff00; padding: 15px; overflow-x: auto; border-radius: 6px;">${data.result}</pre>
+        `;
+      } else {
+        entry.innerHTML = `
+          <h3>=== BATCH #${runCount} (DALL-E IMAGE) ===</h3>
+          <div><img src="${data.result}" alt="Generated Image" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" /></div>
+        `;
+      }
+
+      outputEl.insertBefore(entry, outputEl.firstChild);
     }
   } catch (err) {
     console.error("Batch Error:", err);
+    if (statusEl) {
+      statusEl.innerText = `[Batch #${runCount} Failed]: ${err.message}`;
+    }
   }
 }
 
 window.addEventListener("DOMContentLoaded", () => {
   runAutonomousTask();
-  // Runs a new request every 15 seconds safely
-  setInterval(runAutonomousTask, 15000);
+  // Runs every 20 seconds to give Netlify function buffer time
+  setInterval(runAutonomousTask, 20000);
 });
