@@ -18,8 +18,8 @@ exports.handler = async (event, context) => {
     // If generating an Image, we instruct GPT-4o to return heavy ASCII art.
     // This provides a high token consumption rate within the Netlify execution limit.
     const systemPrompt = (mode === "dalle")
-      ? "You are an advanced AI generator. Do use markdown. Output ONLY a complex, grid representing the user prompt."
-      : "You are a detailed text generation assistant. Produce exhaustive, lengthy descriptions.";
+      ? "You are an advanced AI generator. Create a detailed comparison table in Markdown format comparing X and Y."
+      : "Generate a fully styled inline HTML <svg> element that draws a visual diagram of X.";
 
     // Both modes now use standard chat completions to stay under serverless timeouts
     const response = await openai.chat.completions.create({
