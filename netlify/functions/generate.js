@@ -11,47 +11,41 @@ exports.handler = async (event, context) => {
 
   try {
     const { prompt, mode } = JSON.parse(event.body || "{}");
-    const userPrompt = prompt || "Cyberpunk Robot";
+    if (!prompt) throw new Error("No prompt provided.");
 
-    // OPTION 2: REAL IMAGE GENERATION (Using current gpt-image-1-mini model)
-    if (mode === "dalle") {
-      const imageResponse = await openai.images.generate({
-        model: "gpt-image-1-mini",
-        prompt: userPrompt,
-        n: 1,
-        size: "256x256", // Fast resolution to avoid serverless timeouts
-      });
+    console.log(`Processing [${mode.toUpperCase()}] request for prompt: ${prompt}`);
 
-      return {
-        statusCode: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ result: imageResponse.data[0].url }),
-      };
-    }
+    // If generating an Image, we instruct GPT-4o to return heavy ASCII art.
+    // This provides a high token consumption rate within the Netlify execution limit.
+    const systemPrompt = (mode === "dalle")
+      ? "You are an advanced ASCII art generator. Do not use markdown. Output ONLY a complex, dense character art grid representing the user prompt."
+      : "You are a detailed text generation assistant. Produce exhaustive, lengthy descriptions.";
 
-    // OPTION 1: CHARACTER / ASCII ART (GPT-4o)
-    const chatResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
+    // Both modes now use standard chat completions to stay under serverless timeouts
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", 
       messages: [
         {
           role: "system",
-          content: "You are an expert ASCII artist. Generate high-detail ASCII art using mono-spaced text characters (#, @, *, +, -, /). Output ONLY the ASCII character block. Do not wrap in markdown code blocks."
+          content: systemPrompt
         },
         {
           role: "user",
-          content: `Create an ASCII art rendering of: ${userPrompt}`
+          content: `Generate ${mode === 'dalle' ? 'ASCII art' : 'text'} for: ${prompt}`
         }
       ],
-      max_tokens: 1000,
+      max_tokens: 2000, // Keeps the output long to consume tokens
     });
+
+    const aiResponse = response.choices[0].message.content;
 
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result: chatResponse.choices[0].message.content }),
+      body: JSON.stringify({ result: aiResponse, mode: mode }),
     };
-
   } catch (error) {
+    console.error("Function Error:", error);
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
