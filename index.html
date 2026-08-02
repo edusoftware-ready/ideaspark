@@ -1,33 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>IdeaSpark AI</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Generator</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+  <div class="container" style="max-width: 800px; margin: 40px auto; font-family: sans-serif;">
+    <h1>AI Character & Image Generator</h1>
+    
+    <div style="margin-bottom: 20px;">
+      <label for="modeSelect"><strong>Generation Mode:</strong></label>
+      <select id="modeSelect" style="padding: 8px; font-size: 14px;">
+        <option value="ascii">Option 1: ASCII Character Art (GPT-4o)</option>
+        <option value="dalle">Option 2: Real Images (DALL-E 2)</option>
+      </select>
+    </div>
 
-<div class="container">
+    <div id="status" style="font-weight: bold; color: #555; margin-bottom: 10px;">Initializing...</div>
+    <div id="output"></div>
+  </div>
 
-<h1>✨ IdeaSpark AI</h1>
-
-<p>
-Describe an idea. AI will transform it into a business concept.
-</p>
-
-<textarea id="idea"
-placeholder="Example: A tool that helps restaurants reduce food waste">
-</textarea>
-
-<button onclick="generate()">
-Generate
-</button>
-
-<div id="result"></div>
-
-</div>
-
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
 </body>
 </html>
