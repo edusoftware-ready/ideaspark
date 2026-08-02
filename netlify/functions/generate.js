@@ -11,54 +11,31 @@ exports.handler = async (event, context) => {
 
   try {
     const { prompt } = JSON.parse(event.body || "{}");
-    const seedTopic = prompt || "Autonomous AI Logistics System";
+    const seedTopic = prompt || "Autonomous Enterprise Architecture System";
 
-    // Initialize conversation history
-    let messages = [
-      {
-        role: "system",
-        content:
-          "You are an enterprise software architect. Provide exhaustive, highly detailed technical analysis without shortening your code or descriptions.",
-      },
-      {
-        role: "user",
-        content: `Create a complete technical blueprint for: ${seedTopic}. Include system architecture, database schema, and detailed security edge cases.`,
-      },
-    ];
-
-    let fullReport = [];
-    const MAX_LOOPS = 4; // Executes 4 deep reasoning iterations per button click
-
-    for (let i = 1; i <= MAX_LOOPS; i++) {
-      // Call OpenAI with high max_tokens to maximize throughput
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // Uses gpt-4o for heavy token throughput
-        messages: messages,
-        max_tokens: 2500,
-      });
-
-      const aiResponse = response.choices[0].message.content;
-      fullReport.push(`--- ITERATION ${i} ARCHITECTURE PHASE ---\n${aiResponse}`);
-
-      // Push AI's response into context history so the NEXT call consumes all previous context tokens
-      messages.push({ role: "assistant", content: aiResponse });
-
-      // Prompt the model to critique its own work for the next loop
-      if (i < MAX_LOOPS) {
-        messages.push({
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an enterprise software architect. Provide an extremely verbose, comprehensive, and exhaustive technical analysis without shortening any descriptions or code snippets."
+        },
+        {
           role: "user",
-          content: `Review the architecture above. Identify 5 complex performance bottlenecks and rewrite the spec to solve them with concrete code examples.`,
-        });
-      }
-    }
+          content: `Generate an exhaustive end-to-end technical system architecture, database design, API specification, and security audit blueprint for: ${seedTopic}.`
+        }
+      ],
+      max_tokens: 2000,
+    });
+
+    const aiResponse = response.choices[0].message.content;
 
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result: fullReport.join("\n\n") }),
+      body: JSON.stringify({ result: aiResponse }),
     };
   } catch (error) {
-    console.error("Function Error:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message }),
